@@ -1,21 +1,23 @@
 <div align="center">
 
-# 🪰 Drosophila Connectome AI
+<h1 align="center">🪰 Drosophila Connectome AI</h1>
 
-<img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=600&size=20&pause=1000&color=22D3EE&center=true&vCenter=true&width=600&lines=Biological+Neural+Network;Digitized+and+trained+to+play+chess;Powered+by+the+Drosophila+Connectome" alt="Typing SVG" />
+<p align="center">
+  <strong>A biological neural network, digitized and trained to play chess.</strong>
+</p>
 
 <p align="center">
   <a href="https://github.com/AdilSiddiquiHQ/fly-connectome-chess/stargazers">
-    <img src="https://img.shields.io/github/stars/AdilSiddiquiHQ/fly-connectome-chess?style=flat-square&color=white&labelColor=black&logo=github" alt="Stars Badge"/>
+    <img src="https://img.shields.io/github/stars/AdilSiddiquiHQ/fly-connectome-chess?style=for-the-badge&color=eab308" alt="Stars Badge"/>
   </a>
   <a href="https://pytorch.org/">
-    <img src="https://img.shields.io/badge/PyTorch-MPS_Accelerated-white.svg?style=flat-square&logo=pytorch&logoColor=black&labelColor=black" alt="PyTorch Badge"/>
+    <img src="https://img.shields.io/badge/PyTorch-MPS_Accelerated-ee4c2c.svg?style=for-the-badge&logo=pytorch&logoColor=white" alt="PyTorch Badge"/>
   </a>
   <a href="https://threejs.org/">
-    <img src="https://img.shields.io/badge/WebGL-Three.js-white.svg?style=flat-square&logo=three.js&logoColor=black&labelColor=black" alt="Three.js Badge"/>
+    <img src="https://img.shields.io/badge/WebGL-Three.js-black.svg?style=for-the-badge&logo=three.js&logoColor=white" alt="Three.js Badge"/>
   </a>
   <a href="https://opensource.org/licenses/MIT">
-    <img src="https://img.shields.io/badge/License-MIT-white.svg?style=flat-square&labelColor=black" alt="MIT License"/>
+    <img src="https://img.shields.io/badge/License-MIT-success.svg?style=for-the-badge" alt="MIT License"/>
   </a>
 </p>
 
