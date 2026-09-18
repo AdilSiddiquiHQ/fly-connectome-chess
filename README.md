@@ -139,6 +139,21 @@ Open your web browser and navigate to `http://localhost:5050`.
 
 ---
 
+## 🤝 Contributing (Crowd-Sourcing the Brain)
+
+Because this project relies on Reinforcement Learning, **you can help make the fly smarter.** 
+
+When you clone the repository, you start with the exact biological synaptic weights saved in the `weights.pt` file. If you run the project locally and click **"+1000 Games"**, the PyTorch model will train on your own hardware, carving new dopamine pathways and increasing the fly's ELO.
+
+If you successfully train the fly to a higher level of intelligence:
+1. Fork this repository.
+2. Replace the `weights.pt` and `metadata.json` files with your newly trained versions.
+3. Submit a **Pull Request**. 
+
+Together, we can crowd-source the training of a biological connectome until it reaches Grandmaster status.
+
+---
+
 ## 🏆 Credits
 The structural data for the neuron mapping is derived from the open-source work of the **Janelia Research Campus** and **Google Research** via the [FlyWire](https://flywire.ai) project. 
 
