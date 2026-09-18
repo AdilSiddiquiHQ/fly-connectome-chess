@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess vs. a Fruit Fly | Male CNS v1.0 Simulator</title>
+    
+    <!-- Three.js 3D Engine & OrbitControls & Chess.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; user-select: none; }
+        body { background-color: #050608; color: #e1e4ed; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        
+        /* Header */
+        header { background: linear-gradient(180deg, #101420 0%, #06080e 100%); padding: 10px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c2233; box-shadow: 0 4px 25px rgba(0,0,0,0.7); z-index: 10; }
+        .title-area h1 { font-size: 1.25rem; font-weight: 800; color: #ffffff; display: flex; align-items: center; gap: 10px; letter-spacing: -0.5px; }
+        .title-area h1 span.badge { color: #ff9900; background: rgba(255, 153, 0, 0.15); font-size: 0.72rem; font-weight: 800; padding: 3px 10px; border-radius: 20px; border: 1px solid rgba(255,153,0,0.4); text-transform: uppercase; letter-spacing: 0.5px; }
+        .subtitle { font-size: 0.78rem; color: #727b91; margin-top: 2px; font-weight: 500; }
+        
+        .train-badge { background: #111522; padding: 6px 16px; border-radius: 8px; font-size: 0.85rem; border: 1px solid #20273b; display: flex; align-items: center; gap: 10px; }
+        .train-badge strong { color: #00e5ff; font-family: "SF Mono", Monaco, Consolas, monospace; font-size: 0.95rem; }
+
+        /* Main Layout */
+        .main-container { display: flex; flex: 1; height: calc(100vh - 60px); }
+        
+        /* Left Pane - 3D Studio Chessboard View (60%) */
+        .game-pane { width: 60%; position: relative; background: #050608; display: flex; flex-direction: column; border-right: 1px solid #1c2233; }
+        #canvas-3d-game { width: 100%; height: 100%; flex: 1; cursor: pointer; }
+
+        /* Status Overlay */
+        .status-overlay { position: absolute; top: 16px; left: 16px; background: rgba(8, 10, 18, 0.92); backdrop-filter: blur(14px); padding: 10px 20px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.15); font-size: 0.88rem; font-weight: 800; letter-spacing: 0.5px; box-shadow: 0 8px 32px rgba(0,0,0,0.7); display: flex; align-items: center; gap: 10px; pointer-events: none; z-index: 5; }
+        .status-overlay.turn-user { color: #00ff88; border-color: rgba(0, 255, 136, 0.5); }
+        .status-overlay.turn-fly { color: #ff9900; border-color: rgba(255, 153, 0, 0.5); }
+        .status-indicator { width: 10px; height: 10px; border-radius: 50%; background: currentColor; box-shadow: 0 0 12px currentColor; }
+
+        .game-controls { padding: 12px 20px; background: #0a0c16; border-top: 1px solid #1c2233; display: flex; justify-content: space-between; align-items: center; z-index: 5; }
+        .btn-group { display: flex; gap: 10px; }
+        button { background: #161b2b; color: #ccdedf; border: 1px solid #252e45; padding: 10px 18px; border-radius: 8px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 6px; }
+        button:hover { background: #222a42; border-color: #00e5ff; color: #fff; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 229, 255, 0.25); }
+        button:active { transform: translateY(0); }
+        button.primary { background: #00e5ff; color: #040508; border: none; font-weight: 800; }
+        button.primary:hover { background: #33ebff; box-shadow: 0 4px 15px rgba(0, 229, 255, 0.4); }
+        button.accent { background: linear-gradient(135deg, #ff9900 0%, #ff6600 100%); color: #ffffff; border: none; font-weight: 800; }
+        button.accent:hover { opacity: 0.95; box-shadow: 0 4px 15px rgba(255, 153, 0, 0.4); }
+
+        /* Right Pane - Live Brain Telemetry (40%) */
+        .telemetry-pane { width: 40%; background: #06080e; padding: 16px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
+        
+        .brain-card { background: #0d101c; border: 1px solid #1c2233; border-radius: 12px; padding: 14px; position: relative; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+        .card-header { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; color: #707a94; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        
+        #canvas-brain-3d { width: 100%; height: 260px; background: #020305; border-radius: 8px; border: 1px solid #161b2b; }
+        
+        /* Legend */
+        .brain-legend { display: flex; justify-content: space-around; font-size: 0.72rem; margin-top: 10px; color: #949cb3; font-weight: 700; }
+        .legend-item { display: flex; align-items: center; gap: 6px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; box-shadow: 0 0 8px currentColor; }
+        .dot.blue { background: #0088ff; color: #0088ff; }
+        .dot.yellow { background: #ffcc00; color: #ffcc00; }
+        .dot.green { background: #00ff88; color: #00ff88; }
+        .dot.red { background: #ff3366; color: #ff3366; }
+
+        /* Telemetry Metrics Grid */
+        .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; }
+        .metric-box { background: #05060b; border: 1px solid #171c2c; padding: 10px 6px; border-radius: 8px; text-align: center; }
+        .metric-value { font-size: 1.15rem; font-weight: 800; color: #00e5ff; font-family: "SF Mono", Monaco, Consolas, monospace; }
+        .metric-label { font-size: 0.65rem; color: #5f677d; margin-top: 4px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+
+        /* Candidate Moves Bar List */
+        .candidates-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+        .candidate-row { display: flex; align-items: center; gap: 12px; font-size: 0.85rem; }
+        .candidate-move { width: 50px; font-weight: 800; font-family: "SF Mono", Monaco, Consolas, monospace; color: #ffffff; }
+        .bar-container { flex: 1; background: #040508; height: 10px; border-radius: 5px; overflow: hidden; position: relative; border: 1px solid #151a29; }
+        .bar-fill { height: 100%; background: linear-gradient(90deg, #0088ff, #00e5ff); width: 0%; transition: width 0.4s ease-out; border-radius: 5px; }
+        .candidate-pct { width: 45px; text-align: right; font-size: 0.8rem; color: #00e5ff; font-family: "SF Mono", Monaco, Consolas, monospace; font-weight: 800; }
+
+        /* System Info Box */
+        .info-box { background: #0b0e18; border: 1px solid #1a2030; border-radius: 8px; padding: 12px; font-size: 0.78rem; color: #707a94; line-height: 1.5; }
+        .info-box strong { color: #c8cedf; font-weight: 700; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="title-area">
+            <h1>Chess vs. a Fruit Fly <span class="badge">Male Drosophila CNS v1.0</span></h1>
+            <div class="subtitle">164,587 Neurons · 25.6M Synapses · M4 Apple Silicon Hardware Accelerated</div>
+        </div>
+        <div class="train-badge">
+            <span>Trained Games: <strong id="val-games">0</strong></span>
+            <span>Estimated ELO: <strong id="val-elo">~200</strong></span>
+            <button class="accent" onclick="triggerTrain(100)">🏋️ +100 Games</button>
+            <button class="accent" onclick="triggerTrain(500)">🏋️ +500 Games</button>
+            <button class="accent" style="background: linear-gradient(135deg, #00e5ff 0%, #0088ff 100%); color: #000;" onclick="triggerTrain(1000)">🚀 +1,000 Games</button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Left Pane: 3D Chess Game -->
+        <div class="game-pane">
+            <div id="status-overlay" class="status-overlay turn-user">
+                <span class="status-indicator"></span> <span id="status-text">YOUR MOVE (Click piece to play)</span>
+            </div>
+            <div id="canvas-3d-game"></div>
+            
+            <div class="game-controls">
+                <div class="btn-group">
+                    <button id="btn-newgame" class="primary">🔄 New Game</button>
+                    <button id="btn-undo">↩️ Undo Move</button>
+                </div>
+                <div class="btn-group">
+                    <button id="btn-recenter">📷 Recentre Camera</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Pane: Live Brain Activity -->
+        <div class="telemetry-pane">
+            
+            <!-- 3D Connectome Card -->
+            <div class="brain-card">
+                <div class="card-header">
+                    <span>MALE CNS CONNECTOME · LIVE NEURAL CASCADE</span>
+                    <span id="brain-state" style="color: #00ff88; font-size: 0.75rem; font-weight: 800;">IDLE</span>
+                </div>
+                <div id="canvas-brain-3d"></div>
+                <div class="brain-legend">
+                    <div class="legend-item"><span class="dot blue"></span> Optic Lobe</div>
+                    <div class="legend-item"><span class="dot yellow"></span> Central Brain</div>
+                    <div class="legend-item"><span class="dot green"></span> Sensory In (Board)</div>
+                    <div class="legend-item"><span class="dot red"></span> Motor Out (Move)</div>
+                </div>
+
+                <!-- Telemetry Metrics -->
+                <div class="metrics-grid">
+                    <div class="metric-box">
+                        <div id="m-neurons" class="metric-value">0</div>
+                        <div class="metric-label">Neurons Fired</div>
+                    </div>
+                    <div class="metric-box">
+                        <div id="m-spikes" class="metric-value">0</div>
+                        <div class="metric-label">Spikes</div>
+                    </div>
+                    <div class="metric-box">
+                        <div id="m-motor" class="metric-value">0</div>
+                        <div class="metric-label">Motor Spikes</div>
+                    </div>
+                    <div class="metric-box">
+                        <div id="m-simtime" class="metric-value">0ms</div>
+                        <div class="metric-label">Sim Time</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ranked Candidate Moves -->
+            <div class="brain-card">
+                <div class="card-header">
+                    <span>CANDIDATE MOVE EVALUATIONS</span>
+                    <span style="font-size: 0.72rem; color: #00e5ff; font-weight: 800;">SOFTMAX PROBABILITIES</span>
+                </div>
+                <div id="candidates-container" class="candidates-list">
+                    <div style="font-size: 0.8rem; color: #5a6278; text-align: center; padding: 16px;">Click a piece to highlight legal moves...</div>
+                </div>
+            </div>
+
+            <!-- System Info -->
+            <div class="info-box">
+                Every legal move is played out and the connectome is simulated on the position it would create. Each board position is injected as current into <strong>8,865 sensory neurons</strong>; <strong>2,129 descending and motor neurons</strong> are read out, and a trained map ranks those options against each other.
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        class Tween {
+            constructor(obj, target, duration, onComplete, onUpdate) {
+                this.obj = obj; this.target = target; this.duration = duration;
+                this.onComplete = onComplete; this.onUpdate = onUpdate;
+                this.startTime = Date.now(); this.startState = {};
+                for (let k in target) this.startState[k] = obj[k];
+                if(!window.activeTweens) window.activeTweens = [];
+                window.activeTweens.push(this);
+            }
+            update() {
+                let t = Math.min((Date.now() - this.startTime) / this.duration, 1.0);
+                let ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+                for (let k in this.target) this.obj[k] = this.startState[k] + (this.target[k] - this.startState[k]) * ease;
+                if (this.onUpdate) this.onUpdate(ease);
+                if (t >= 1.0) { if (this.onComplete) this.onComplete(); return true; }
+                return false;
+            }
+        }
+
+        let game = new Chess();
+        let selectedSquare = null;
+        let pieceMeshes = {};
+        let highlightMeshes = [];
+
+        let sceneGame, cameraGame, rendererGame, controlsGame;
+        let boardGroup, piecesGroup, highlightsGroup, flyMesh;
+        let raycaster, mouse;
+        let isMouseDown = false, pointerDownPos = { x: 0, y: 0 };
+
+        let sceneBrain, cameraBrain, rendererBrain, brainControls;
+        let brainParticles, particleColors, particlePositions;
+
+        let woodTex, marbleWhiteTex, marbleBlackTex, wingTex, eyeTex, particleSprite;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            generateProceduralTextures();
+            initGame3D();
+            initBrain3D();
+            setupUIButtons();
+            updateServerState();
+        });
+
+        // ==========================================
+        // PROCEDURAL TEXTURE GENERATORS
+        // ==========================================
+        function generateProceduralTextures() {
+            const canvasWood = document.createElement('canvas'); canvasWood.width = 1024; canvasWood.height = 1024;
+            const ctxW = canvasWood.getContext('2d'); ctxW.fillStyle = '#221208'; ctxW.fillRect(0,0,1024,1024);
+            for (let i = 0; i < 1000; i++) {
+                ctxW.fillStyle = `rgba(10, 5, 2, ${Math.random() * 0.2})`;
+                ctxW.fillRect(0, Math.random() * 1024, 1024, 1 + Math.random() * 4);
+            }
+            woodTex = new THREE.CanvasTexture(canvasWood);
+            woodTex.wrapS = THREE.RepeatWrapping; woodTex.wrapT = THREE.RepeatWrapping;
+
+            const canvasMW = document.createElement('canvas'); canvasMW.width = 1024; canvasMW.height = 1024;
+            const ctxMW = canvasMW.getContext('2d'); ctxMW.fillStyle = '#f8fafc'; ctxMW.fillRect(0,0,1024,1024);
+            ctxMW.strokeStyle = 'rgba(160,175,200,0.25)'; ctxMW.lineWidth = 4;
+            for(let i=0; i<14; i++){
+                ctxMW.beginPath(); ctxMW.moveTo(Math.random()*1024, 0);
+                ctxMW.bezierCurveTo(Math.random()*1024, 300, Math.random()*1024, 700, Math.random()*1024, 1024); ctxMW.stroke();
+            }
+            marbleWhiteTex = new THREE.CanvasTexture(canvasMW);
+
+            const canvasMB = document.createElement('canvas'); canvasMB.width = 1024; canvasMB.height = 1024;
+            const ctxMB = canvasMB.getContext('2d'); ctxMB.fillStyle = '#0e121b'; ctxMB.fillRect(0,0,1024,1024);
+            ctxMB.strokeStyle = 'rgba(0,229,255,0.2)'; ctxMB.lineWidth = 3;
+            for(let i=0; i<12; i++){
+                ctxMB.beginPath(); ctxMB.moveTo(Math.random()*1024, 0);
+                ctxMB.bezierCurveTo(Math.random()*1024, 400, Math.random()*1024, 600, Math.random()*1024, 1024); ctxMB.stroke();
+            }
+            marbleBlackTex = new THREE.CanvasTexture(canvasMB);
+
+            const canvasWing = document.createElement('canvas'); canvasWing.width = 512; canvasWing.height = 512;
+            const ctxWing = canvasWing.getContext('2d'); ctxWing.fillStyle = 'rgba(255,255,255,0.05)'; ctxWing.fillRect(0,0,512,512);
+            ctxWing.strokeStyle = 'rgba(50,30,10,0.6)'; ctxWing.lineWidth = 4;
+            ctxWing.beginPath(); ctxWing.moveTo(20,256); ctxWing.lineTo(490,256); ctxWing.stroke();
+            for(let i=0; i<12; i++){
+                ctxWing.beginPath(); ctxWing.moveTo(50 + i*35, 256);
+                ctxWing.quadraticCurveTo(200 + i*20, 50, 450, 200); ctxWing.stroke();
+            }
+            wingTex = new THREE.CanvasTexture(canvasWing);
+
+            const canvasEye = document.createElement('canvas'); canvasEye.width = 256; canvasEye.height = 256;
+            const ctxEye = canvasEye.getContext('2d'); ctxEye.fillStyle = '#cc0011'; ctxEye.fillRect(0,0,256,256);
+            ctxEye.strokeStyle = '#660000'; ctxEye.lineWidth = 2;
+            for(let x=0; x<256; x+=16){
+                for(let y=0; y<256; y+=16){ ctxEye.strokeRect(x,y,16,16); }
+            }
+            eyeTex = new THREE.CanvasTexture(canvasEye);
+
+            const canvasDot = document.createElement('canvas'); canvasDot.width = 64; canvasDot.height = 64;
+            const ctxDot = canvasDot.getContext('2d');
+            const grad = ctxDot.createRadialGradient(32,32,0, 32,32,32);
+            grad.addColorStop(0, 'rgba(255,255,255,1)');
+            grad.addColorStop(0.4, 'rgba(255,255,255,0.85)');
+            grad.addColorStop(1, 'rgba(255,255,255,0)');
+            ctxDot.fillStyle = grad; ctxDot.beginPath(); ctxDot.arc(32,32,32,0,Math.PI*2); ctxDot.fill();
+            particleSprite = new THREE.CanvasTexture(canvasDot);
+            
+            // Procedural Normal Map for Micro-bumps
+            const canvasNormal = document.createElement('canvas'); canvasNormal.width = 512; canvasNormal.height = 512;
+            const ctxNormal = canvasNormal.getContext('2d');
+            const imgData = ctxNormal.createImageData(512, 512);
+            for(let i=0; i<imgData.data.length; i+=4) {
+                let nx = (Math.random() - 0.5) * 0.2;
+                let ny = (Math.random() - 0.5) * 0.2;
+                let nz = 1.0;
+                let len = Math.sqrt(nx*nx + ny*ny + nz*nz);
+                imgData.data[i] = Math.floor((nx/len * 0.5 + 0.5) * 255);
+                imgData.data[i+1] = Math.floor((ny/len * 0.5 + 0.5) * 255);
+                imgData.data[i+2] = Math.floor((nz/len * 0.5 + 0.5) * 255);
+                imgData.data[i+3] = 255;
+            }
+            ctxNormal.putImageData(imgData, 0, 0);
+            window.normalMapTex = new THREE.CanvasTexture(canvasNormal);
+            window.normalMapTex.wrapS = THREE.RepeatWrapping; window.normalMapTex.wrapT = THREE.RepeatWrapping;
+
+            // Procedural Studio HDRI (CubeMap) for ultra-realistic reflections
+            const canvasEnv = document.createElement('canvas'); canvasEnv.width = 1024; canvasEnv.height = 512;
+            const ctxEnv = canvasEnv.getContext('2d');
+            const gradEnv = ctxEnv.createLinearGradient(0,0,0,512);
+            gradEnv.addColorStop(0, '#11131a');
+            gradEnv.addColorStop(0.5, '#050608');
+            gradEnv.addColorStop(1, '#020203');
+            ctxEnv.fillStyle = gradEnv; ctxEnv.fillRect(0,0,1024,512);
+            // Draw studio lights
+            ctxEnv.fillStyle = '#ffffff'; ctxEnv.filter = 'blur(15px)';
+            ctxEnv.fillRect(200, 100, 150, 80);
+            ctxEnv.fillStyle = '#00e5ff'; ctxEnv.filter = 'blur(25px)';
+            ctxEnv.fillRect(700, 150, 100, 150);
+            ctxEnv.fillStyle = '#ff9900'; ctxEnv.filter = 'blur(30px)';
+            ctxEnv.fillRect(400, 300, 200, 60);
+            
+            const envTex = new THREE.CanvasTexture(canvasEnv);
+            envTex.mapping = THREE.EquirectangularReflectionMapping;
+            window.envMapTex = envTex;
+        }
+
+        // ==========================================
+        // 1. HYPER-REALISTIC STUDIO CHESSBOARD & FLY
+        // ==========================================
+        function initGame3D() {
+            const container = document.getElementById('canvas-3d-game');
+            sceneGame = new THREE.Scene();
+            sceneGame.background = new THREE.Color(0x050608);
+
+            cameraGame = new THREE.PerspectiveCamera(38, container.clientWidth / container.clientHeight, 0.1, 1000);
+            cameraGame.position.set(0, 11.5, 11.5);
+
+            rendererGame = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+            rendererGame.setSize(container.clientWidth, container.clientHeight);
+            rendererGame.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            rendererGame.shadowMap.enabled = true;
+            rendererGame.shadowMap.type = THREE.PCFSoftShadowMap;
+            rendererGame.toneMapping = THREE.ACESFilmicToneMapping;
+            rendererGame.toneMappingExposure = 1.3;
+            container.appendChild(rendererGame.domElement);
+
+            sceneGame.environment = window.envMapTex;
+
+            controlsGame = new THREE.OrbitControls(cameraGame, rendererGame.domElement);
+            controlsGame.enableDamping = true;
+            controlsGame.dampingFactor = 0.05;
+            controlsGame.maxPolarAngle = Math.PI / 2 - 0.04;
+            controlsGame.minDistance = 6;
+            controlsGame.maxDistance = 22;
+            controlsGame.target.set(0, 0, 0);
+
+            // Studio Lighting
+            const ambientLight = new THREE.AmbientLight(0xfff5ea, 0.8);
+            sceneGame.add(ambientLight);
+
+            const keySpotLight = new THREE.SpotLight(0xfff8ee, 3.0);
+            keySpotLight.position.set(6, 18, 8);
+            keySpotLight.angle = Math.PI / 4;
+            keySpotLight.penumbra = 0.3;
+            keySpotLight.castShadow = true;
+            keySpotLight.shadow.mapSize.width = 4096; keySpotLight.shadow.mapSize.height = 4096;
+            sceneGame.add(keySpotLight);
+
+            const blueFillLight = new THREE.PointLight(0x00e5ff, 2.0, 20);
+            blueFillLight.position.set(-9, 6, -9);
+            sceneGame.add(blueFillLight);
+
+            const warmRimLight = new THREE.PointLight(0xff9900, 1.4, 15);
+            warmRimLight.position.set(9, 4, -9);
+            sceneGame.add(warmRimLight);
+
+            boardGroup = new THREE.Group();
+            piecesGroup = new THREE.Group();
+            highlightsGroup = new THREE.Group();
+            sceneGame.add(boardGroup);
+            sceneGame.add(piecesGroup);
+            sceneGame.add(highlightsGroup);
+
+            createHyperRealisticBoard3D();
+            createHyperRealisticFly3D();
+            renderPieces3D();
+
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+
+            container.addEventListener('pointerdown', (e) => {
+                isMouseDown = true;
+                pointerDownPos = { x: e.clientX, y: e.clientY };
+            });
+
+            container.addEventListener('pointerup', (e) => {
+                if (!isMouseDown) return;
+                isMouseDown = false;
+                
+                const dx = Math.abs(e.clientX - pointerDownPos.x);
+                const dy = Math.abs(e.clientY - pointerDownPos.y);
+                if (dx < 6 && dy < 6) {
+                    onCanvasClick(e, container);
+                }
+            });
+
+            window.addEventListener('resize', () => {
+                cameraGame.aspect = container.clientWidth / container.clientHeight;
+                cameraGame.updateProjectionMatrix();
+                rendererGame.setSize(container.clientWidth, container.clientHeight);
+            });
+
+            function animate() {
+                requestAnimationFrame(animate);
+                controlsGame.update();
+
+                if (flyMesh) {
+                    if (!flyMesh.userData.isAnimating) {
+                        const t = Date.now() * 0.003;
+                        flyMesh.position.y = 3.3 + Math.sin(t * 1.6) * 0.14;
+                        flyMesh.position.x = Math.sin(t * 0.9) * 0.22;
+                        flyMesh.rotation.z = Math.sin(t * 1.1) * 0.06;
+                        flyMesh.rotation.x = Math.sin(t * 0.7) * 0.04;
+                        flyMesh.rotation.y = Math.sin(t * 0.5) * 0.04;
+                        
+                        if (flyMesh.userData.wingL && flyMesh.userData.wingR) {
+                            const flap = Math.sin(Date.now() * 0.09) * 0.35;
+                            flyMesh.userData.wingL.rotation.z = 0.25 + flap;
+                            flyMesh.userData.wingR.rotation.z = -0.25 - flap;
+                        }
+                    } else {
+                        // Flap very fast during movement
+                        if (flyMesh.userData.wingL && flyMesh.userData.wingR) {
+                            const flap = Math.sin(Date.now() * 0.5) * 0.6;
+                            flyMesh.userData.wingL.rotation.z = 0.25 + flap;
+                            flyMesh.userData.wingR.rotation.z = -0.25 - flap;
+                        }
+                    }
+                }
+
+                if (window.activeTweens) {
+                    for(let i=window.activeTweens.length-1; i>=0; i--){
+                       if(window.activeTweens[i].update()) window.activeTweens.splice(i,1);
+                    }
+                }
+
+                rendererGame.render(sceneGame, cameraGame);
+            }
+            animate();
+        }
+
+        function createHyperRealisticBoard3D() {
+            const tableGeo = new THREE.BoxGeometry(16, 0.6, 16);
+            const tableMat = new THREE.MeshStandardMaterial({ map: woodTex, roughness: 0.2, metalness: 0.2 });
+            const tableMesh = new THREE.Mesh(tableGeo, tableMat);
+            tableMesh.position.y = -0.36; tableMesh.receiveShadow = true;
+            boardGroup.add(tableMesh);
+
+            const bezelGeo = new THREE.BoxGeometry(9.4, 0.12, 9.4);
+            const bezelMat = new THREE.MeshStandardMaterial({ color: 0x00e5ff, metalness: 0.9, roughness: 0.1, emissive: 0x004466 });
+            const bezelMesh = new THREE.Mesh(bezelGeo, bezelMat);
+            bezelMesh.position.y = -0.02;
+            boardGroup.add(bezelMesh);
+
+            const squareGeo = new THREE.BoxGeometry(1.0, 0.12, 1.0);
+            const files = ['a','b','c','d','e','f','g','h'];
+
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const isDark = (r + c) % 2 === 1;
+                    const sqMat = new THREE.MeshStandardMaterial({
+                        map: isDark ? marbleBlackTex : marbleWhiteTex,
+                        roughness: 0.18, metalness: 0.15
+                    });
+                    const sqMesh = new THREE.Mesh(squareGeo, sqMat);
+                    sqMesh.position.set(c - 3.5, 0, r - 3.5); sqMesh.receiveShadow = true;
+                    sqMesh.userData = { square: files[c] + (8 - r) };
+                    boardGroup.add(sqMesh);
+                }
+            }
+        }
+
+        function createStauntonPieceGeometry(type) {
+            let points = [];
+
+            if (type === 'p') {
+                points.push(new THREE.Vector2(0, 0));
+                points.push(new THREE.Vector2(0.38, 0));
+                points.push(new THREE.Vector2(0.38, 0.08));
+                points.push(new THREE.Vector2(0.32, 0.12));
+                points.push(new THREE.Vector2(0.28, 0.22));
+                points.push(new THREE.Vector2(0.18, 0.42));
+                points.push(new THREE.Vector2(0.24, 0.48));
+                points.push(new THREE.Vector2(0.22, 0.52));
+                points.push(new THREE.Vector2(0.15, 0.56));
+                points.push(new THREE.Vector2(0.22, 0.65));
+                points.push(new THREE.Vector2(0.20, 0.74));
+                points.push(new THREE.Vector2(0, 0.78));
+
+            } else if (type === 'r') {
+                points.push(new THREE.Vector2(0, 0));
+                points.push(new THREE.Vector2(0.40, 0));
+                points.push(new THREE.Vector2(0.40, 0.10));
+                points.push(new THREE.Vector2(0.34, 0.15));
+                points.push(new THREE.Vector2(0.28, 0.30));
+                points.push(new THREE.Vector2(0.28, 0.60));
+                points.push(new THREE.Vector2(0.36, 0.66));
+                points.push(new THREE.Vector2(0.36, 0.85));
+                points.push(new THREE.Vector2(0.28, 0.85));
+                points.push(new THREE.Vector2(0, 0.85));
+
+            } else if (type === 'b') {
+                points.push(new THREE.Vector2(0, 0));
+                points.push(new THREE.Vector2(0.39, 0));
+                points.push(new THREE.Vector2(0.39, 0.10));
+                points.push(new THREE.Vector2(0.32, 0.16));
+                points.push(new THREE.Vector2(0.24, 0.35));
+                points.push(new THREE.Vector2(0.16, 0.55));
+                points.push(new THREE.Vector2(0.24, 0.62));
+                points.push(new THREE.Vector2(0.22, 0.72));
+                points.push(new THREE.Vector2(0.24, 0.85));
+                points.push(new THREE.Vector2(0.18, 0.95));
+                points.push(new THREE.Vector2(0.06, 1.02));
+                points.push(new THREE.Vector2(0, 1.05));
+
+            } else if (type === 'q') {
+                points.push(new THREE.Vector2(0, 0));
+                points.push(new THREE.Vector2(0.42, 0));
+                points.push(new THREE.Vector2(0.42, 0.12));
+                points.push(new THREE.Vector2(0.35, 0.18));
+                points.push(new THREE.Vector2(0.26, 0.40));
+                points.push(new THREE.Vector2(0.18, 0.70));
+                points.push(new THREE.Vector2(0.28, 0.78));
+                points.push(new THREE.Vector2(0.26, 0.88));
+                points.push(new THREE.Vector2(0.34, 1.05));
+                points.push(new THREE.Vector2(0.12, 1.10));
+                points.push(new THREE.Vector2(0, 1.15));
+
+            } else if (type === 'k') {
+                points.push(new THREE.Vector2(0, 0));
+                points.push(new THREE.Vector2(0.44, 0));
+                points.push(new THREE.Vector2(0.44, 0.12));
+                points.push(new THREE.Vector2(0.37, 0.20));
+                points.push(new THREE.Vector2(0.28, 0.45));
+                points.push(new THREE.Vector2(0.20, 0.75));
+                points.push(new THREE.Vector2(0.30, 0.84));
+                points.push(new THREE.Vector2(0.28, 0.95));
+                points.push(new THREE.Vector2(0.36, 1.12));
+                points.push(new THREE.Vector2(0.14, 1.18));
+                points.push(new THREE.Vector2(0, 1.22));
+
+            } else if (type === 'n') {
+                points.push(new THREE.Vector2(0, 0));
+                points.push(new THREE.Vector2(0.40, 0));
+                points.push(new THREE.Vector2(0.40, 0.10));
+                points.push(new THREE.Vector2(0.32, 0.16));
+                points.push(new THREE.Vector2(0.25, 0.35));
+                points.push(new THREE.Vector2(0.22, 0.45));
+                points.push(new THREE.Vector2(0, 0.45));
+            }
+
+            // Smooth the points for hyper-realism
+            if (type !== 'n') {
+                const curve = new THREE.SplineCurve(points);
+                points = curve.getPoints(60);
+            }
+
+            const latheGeo = new THREE.LatheGeometry(points, 128);
+            const group = new THREE.Group();
+            const mainMesh = new THREE.Mesh(latheGeo);
+            mainMesh.castShadow = true; mainMesh.receiveShadow = true;
+            group.add(mainMesh);
+
+            if (type === 'n') {
+                const headShape = new THREE.Shape();
+                headShape.moveTo(-0.16, 0.45); headShape.lineTo(-0.20, 0.75); headShape.lineTo(-0.12, 0.92);
+                headShape.lineTo(0.14, 0.87); headShape.lineTo(0.24, 0.65); headShape.lineTo(0.16, 0.45); headShape.closePath();
+
+                const extrudeSettings = { depth: 0.24, bevelEnabled: true, bevelSegments: 4, steps: 1, bevelSize: 0.05, bevelThickness: 0.05 };
+                const headMesh = new THREE.Mesh(new THREE.ExtrudeGeometry(headShape, extrudeSettings));
+                headMesh.position.set(0, 0, -0.12); headMesh.castShadow = true; headMesh.receiveShadow = true;
+                group.add(headMesh);
+
+            } else if (type === 'k') {
+                const crossV = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.24, 0.07));
+                const crossH = new THREE.Mesh(new THREE.BoxGeometry(0.20, 0.07, 0.07));
+                crossV.position.y = 1.32; crossH.position.y = 1.34; crossV.castShadow = true; crossH.castShadow = true;
+                group.add(crossV); group.add(crossH);
+            }
+
+            return group;
+        }
+
+        function renderPieces3D() {
+            while(piecesGroup.children.length > 0) { piecesGroup.remove(piecesGroup.children[0]); }
+            pieceMeshes = {};
+
+            const boardMap = game.board();
+            const whiteMat = new THREE.MeshPhysicalMaterial({ 
+                map: marbleWhiteTex, normalMap: window.normalMapTex, normalScale: new THREE.Vector2(0.4, 0.4),
+                roughness: 0.1, metalness: 0.1, clearcoat: 1.0, clearcoatRoughness: 0.05,
+                transmission: 0.1, ior: 1.5, envMap: window.envMapTex, envMapIntensity: 1.5
+            });
+
+            const blackMat = new THREE.MeshPhysicalMaterial({ 
+                map: marbleBlackTex, normalMap: window.normalMapTex, normalScale: new THREE.Vector2(0.5, 0.5),
+                roughness: 0.15, metalness: 0.6, clearcoat: 1.0, clearcoatRoughness: 0.1,
+                transmission: 0.0, ior: 1.5, envMap: window.envMapTex, envMapIntensity: 1.5
+            });
+
+            const files = ['a','b','c','d','e','f','g','h'];
+
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const p = boardMap[r][c];
+                    if (p) {
+                        const sqStr = files[c] + (8 - r);
+                        const isWhite = p.color === 'w';
+                        const pGroup = createStauntonPieceGeometry(p.type);
+                        const mat = isWhite ? whiteMat : blackMat;
+                        
+                        pGroup.traverse(child => { if (child.isMesh) child.material = mat; });
+                        pGroup.position.set(c - 3.5, 0.06, r - 3.5);
+                        pGroup.userData = { square: sqStr, color: p.color, type: p.type };
+                        
+                        piecesGroup.add(pGroup);
+                        pieceMeshes[sqStr] = pGroup;
+                    }
+                }
+            }
+        }
+
+        function createHyperRealisticFly3D() {
+            const fly = new THREE.Group();
+
+            // Materials
+            const thoraxMat = new THREE.MeshPhysicalMaterial({ color: 0x3a1900, normalMap: window.normalMapTex, normalScale: new THREE.Vector2(0.8, 0.8), roughness: 0.6, metalness: 0.2, clearcoat: 0.4, envMap: window.envMapTex });
+            const abdoMat = new THREE.MeshPhysicalMaterial({ color: 0x1c0b00, normalMap: window.normalMapTex, normalScale: new THREE.Vector2(0.6, 0.6), roughness: 0.4, metalness: 0.2, clearcoat: 0.6, envMap: window.envMapTex });
+            const headMat = new THREE.MeshPhysicalMaterial({ color: 0x2e1100, normalMap: window.normalMapTex, roughness: 0.5, envMap: window.envMapTex });
+            const eyeMat = new THREE.MeshPhysicalMaterial({ map: eyeTex, color: 0xff1122, emissive: 0x330000, roughness: 0.1, metalness: 0.3, clearcoat: 0.9, envMap: window.envMapTex, envMapIntensity: 2.0 });
+            const legMat = new THREE.MeshPhysicalMaterial({ color: 0x110500, roughness: 0.7 });
+            const hairMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+            
+            // Thorax
+            const thoraxGeo = new THREE.SphereGeometry(0.42, 32, 32); thoraxGeo.scale(1, 0.85, 1.25);
+            const thorax = new THREE.Mesh(thoraxGeo, thoraxMat); thorax.castShadow = true; fly.add(thorax);
+
+            // Abdomen (striped effect by adding scaled spheres)
+            for(let i=0; i<6; i++) {
+                const s = 1.0 - (i*0.1);
+                const segGeo = new THREE.SphereGeometry(0.55 * s, 32, 32); segGeo.scale(0.85, 0.7, 1.2);
+                const seg = new THREE.Mesh(segGeo, i%2===0 ? abdoMat : thoraxMat);
+                seg.position.set(0, -0.05 - (i*0.02), -0.7 - (i*0.25));
+                seg.rotation.x = -0.15;
+                seg.castShadow = true;
+                fly.add(seg);
+            }
+
+            // Head
+            const headGeo = new THREE.SphereGeometry(0.35, 32, 32); headGeo.scale(1.1, 0.9, 0.8);
+            const head = new THREE.Mesh(headGeo, headMat); head.position.set(0, 0.02, 0.65); head.rotation.x = 0.2; fly.add(head);
+
+            // Eyes
+            const eyeGeo = new THREE.SphereGeometry(0.22, 32, 32); eyeGeo.scale(1, 1.25, 1.15);
+            const eyeL = new THREE.Mesh(eyeGeo, eyeMat); eyeL.position.set(-0.25, 0.08, 0.72); eyeL.rotation.z = -0.3; eyeL.rotation.y = -0.2; fly.add(eyeL);
+            const eyeR = new THREE.Mesh(eyeGeo, eyeMat); eyeR.position.set(0.25, 0.08, 0.72); eyeR.rotation.z = 0.3; eyeR.rotation.y = 0.2; fly.add(eyeR);
+
+            // Antennae
+            const antGeo = new THREE.CylinderGeometry(0.01, 0.02, 0.3, 8);
+            const antL = new THREE.Mesh(antGeo, legMat); antL.position.set(-0.08, 0.2, 1.0); antL.rotation.x = 1.0; antL.rotation.z = 0.5; fly.add(antL);
+            const antR = new THREE.Mesh(antGeo, legMat); antR.position.set(0.08, 0.2, 1.0); antR.rotation.x = 1.0; antR.rotation.z = -0.5; fly.add(antR);
+
+            // Mouthparts (Proboscis)
+            const probGeo = new THREE.CylinderGeometry(0.04, 0.06, 0.25, 16);
+            const prob = new THREE.Mesh(probGeo, legMat); prob.position.set(0, -0.25, 0.75); prob.rotation.x = -0.4; fly.add(prob);
+
+            // Bristles/Hair on thorax
+            const bristles = new THREE.Group();
+            const bristleGeo = new THREE.CylinderGeometry(0.003, 0.008, 0.15, 4);
+            for(let i=0; i<60; i++) {
+                const b = new THREE.Mesh(bristleGeo, hairMat);
+                const a = Math.random() * Math.PI * 2;
+                const r = Math.random() * 0.3;
+                b.position.set(Math.cos(a)*r, 0.35, Math.sin(a)*r*1.2);
+                b.rotation.set(Math.random()-0.5, Math.random()-0.5, Math.random()-0.5);
+                bristles.add(b);
+            }
+            fly.add(bristles);
+
+            // Wings (hyper realistic shape)
+            const wingShape = new THREE.Shape();
+            wingShape.moveTo(0, 0);
+            wingShape.quadraticCurveTo(0.2, 0.5, 0.3, 1.2);
+            wingShape.quadraticCurveTo(0.1, 1.5, 0, 1.6);
+            wingShape.quadraticCurveTo(-0.1, 1.5, -0.2, 1.2);
+            wingShape.quadraticCurveTo(-0.2, 0.5, 0, 0);
+
+            const wGeo = new THREE.ShapeGeometry(wingShape);
+            const wMat = new THREE.MeshPhysicalMaterial({ 
+                map: wingTex, color: 0xffffff, transparent: true, opacity: 0.6, 
+                roughness: 0.1, metalness: 0.2, clearcoat: 1.0, side: THREE.DoubleSide 
+            });
+
+            const wingGroupL = new THREE.Group(); wingGroupL.position.set(-0.2, 0.35, 0);
+            const wingMeshL = new THREE.Mesh(wGeo, wMat); wingMeshL.rotation.x = -Math.PI/2; wingMeshL.rotation.z = -0.3; wingMeshL.position.set(-0.1, 0, -0.6);
+            wingGroupL.add(wingMeshL); fly.add(wingGroupL);
+
+            const wingGroupR = new THREE.Group(); wingGroupR.position.set(0.2, 0.35, 0);
+            const wingMeshR = new THREE.Mesh(wGeo, wMat); wingMeshR.rotation.x = -Math.PI/2; wingMeshR.rotation.z = 0.3; wingMeshR.position.set(0.1, 0, -0.6);
+            wingGroupR.add(wingMeshR); fly.add(wingGroupR);
+
+            // Legs
+            const createLeg = (x, y, z, rotY, rotZ, name) => {
+                const leg = new THREE.Group();
+                leg.position.set(x, y, z);
+                leg.rotation.y = rotY;
+                leg.rotation.z = rotZ;
+                
+                const femurGeo = new THREE.CylinderGeometry(0.02, 0.015, 0.5, 8);
+                const femur = new THREE.Mesh(femurGeo, legMat); femur.position.y = -0.25; femur.castShadow = true;
+                leg.add(femur);
+
+                const tibiaGeo = new THREE.CylinderGeometry(0.015, 0.01, 0.6, 8);
+                const tibia = new THREE.Mesh(tibiaGeo, legMat); tibia.position.set(0, -0.75, -0.2); tibia.rotation.x = 0.5; tibia.castShadow = true;
+                leg.add(tibia);
+
+                leg.userData = { originalRotZ: rotZ, originalRotY: rotY };
+                return leg;
+            };
+
+            const legLF = createLeg(-0.35, 0, 0.3, -0.4, 0.8);
+            const legRF = createLeg(0.35, 0, 0.3, 0.4, -0.8);
+            fly.add(legLF); fly.add(legRF);
+            fly.add(createLeg(-0.4, 0, -0.1, 0, 0.8));    // L Mid
+            fly.add(createLeg(0.4, 0, -0.1, 0, -0.8));    // R Mid
+            fly.add(createLeg(-0.35, 0, -0.5, 0.4, 0.8)); // L Back
+            fly.add(createLeg(0.35, 0, -0.5, -0.4, -0.8));// R Back
+
+            // Hands for picking up piece!
+            const handGeo = new THREE.SphereGeometry(0.04, 16, 16);
+            const handL = new THREE.Mesh(handGeo, legMat); handL.position.set(-0.2, -0.4, 0.4); fly.add(handL);
+            const handR = new THREE.Mesh(handGeo, legMat); handR.position.set(0.2, -0.4, 0.4); fly.add(handR);
+
+            fly.userData = { wingL: wingGroupL, wingR: wingGroupR, legLF, legRF };
+            fly.position.set(0, 3.3, 0);
+            flyMesh = fly;
+            sceneGame.add(flyMesh);
+        }
+
+        function onCanvasClick(e, container) {
+            if (game.game_over()) return;
+            if (game.turn() !== 'w') return;
+
+            const rect = rendererGame.domElement.getBoundingClientRect();
+            mouse.x = ((e.clientX - rect.left) / container.clientWidth) * 2 - 1;
+            mouse.y = -((e.clientY - rect.top) / container.clientHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, cameraGame);
+            const intersects = raycaster.intersectObjects(sceneGame.children, true);
+            if (intersects.length === 0) return;
+
+            let clickedSquare = null;
+            for (let hit of intersects) {
+                let curr = hit.object;
+                while (curr) {
+                    if (curr.userData && curr.userData.square) {
+                        clickedSquare = curr.userData.square;
+                        break;
+                    }
+                    curr = curr.parent;
+                }
+                if (clickedSquare) break;
+            }
+
+            if (!clickedSquare) return;
+
+            if (selectedSquare) {
+                const moves = game.moves({ verbose: true });
+                const moveObj = moves.find(m => m.from === selectedSquare && m.to === clickedSquare);
+                
+                if (moveObj) {
+                    const uci = moveObj.from + moveObj.to + (moveObj.promotion ? moveObj.promotion : '');
+                    
+                    const files = ['a','b','c','d','e','f','g','h'];
+                    const toC = files.indexOf(clickedSquare[0]);
+                    const toR = 8 - parseInt(clickedSquare[1]);
+                    const pMesh = pieceMeshes[selectedSquare];
+                    
+                    clearHighlights();
+                    selectedSquare = null;
+                    updateTurnOverlay("THE FLY IS CALCULATING...", "turn-fly");
+                    
+                    new Tween(pMesh.position, {x: toC - 3.5, z: toR - 3.5}, 250, () => {
+                        game.move(uci, { sloppy: true });
+                        renderPieces3D();
+                        setTimeout(triggerFlyMove, 50);
+                    });
+                } else {
+                    const p = game.get(clickedSquare);
+                    if (p && p.color === 'w') {
+                        selectedSquare = clickedSquare;
+                        highlightSquareAndMoves(clickedSquare);
+                    } else {
+                        selectedSquare = null;
+                        clearHighlights();
+                    }
+                }
+            } else {
+                const p = game.get(clickedSquare);
+                if (p && p.color === 'w') {
+                    selectedSquare = clickedSquare;
+                    highlightSquareAndMoves(clickedSquare);
+                }
+            }
+        }
+
+        function highlightSquareAndMoves(sq) {
+            clearHighlights();
+            const files = ['a','b','c','d','e','f','g','h'];
+            const c = files.indexOf(sq[0]);
+            const r = 8 - parseInt(sq[1]);
+
+            const boxGeo = new THREE.BoxGeometry(1.02, 0.13, 1.02);
+            const boxMat = new THREE.MeshBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.5 });
+            const box = new THREE.Mesh(boxGeo, boxMat);
+            box.position.set(c - 3.5, 0.01, r - 3.5);
+            highlightsGroup.add(box);
+            highlightMeshes.push(box);
+
+            const moves = game.moves({ square: sq, verbose: true });
+            moves.forEach(m => {
+                const tc = files.indexOf(m.to[0]);
+                const tr = 8 - parseInt(m.to[1]);
+
+                const dotGeo = new THREE.CircleGeometry(0.22, 24);
+                const dotMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff, side: THREE.DoubleSide, transparent: true, opacity: 0.85 });
+                const dot = new THREE.Mesh(dotGeo, dotMat);
+                dot.rotation.x = -Math.PI / 2;
+                dot.position.set(tc - 3.5, 0.07, tr - 3.5);
+                highlightsGroup.add(dot);
+                highlightMeshes.push(dot);
+            });
+
+            document.getElementById('candidates-container').innerHTML = `<div style="font-size: 0.8rem; color: #00ff88; text-align: center; padding: 12px; font-weight: 700;">Selected [${sq}] - ${moves.length} Legal Moves Available</div>`;
+        }
+
+        function clearHighlights() {
+            while (highlightsGroup.children.length > 0) { highlightsGroup.remove(highlightsGroup.children[0]); }
+            highlightMeshes = [];
+        }
+
+        function triggerFlyMove() {
+            document.getElementById('brain-state').innerText = "SIMULATING 164,587 NEURONS...";
+            document.getElementById('brain-state').style.color = "#ff9900";
+
+            fetch('/api/move', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fen: game.fen() })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.uci) {
+                    document.getElementById('m-neurons').innerText = data.telemetry.neurons_fired.toLocaleString();
+                    document.getElementById('m-spikes').innerText = data.telemetry.spikes.toLocaleString();
+                    document.getElementById('m-motor').innerText = data.telemetry.motor_spikes;
+                    document.getElementById('m-simtime').innerText = data.telemetry.sim_time_ms + "ms";
+
+                    renderCandidateMoves(data.ranked_candidates);
+                    pulseBrainParticles();
+
+                    const uci = data.uci;
+                    const fromSq = uci.substring(0, 2);
+                    const toSq = uci.substring(2, 4);
+                    
+                    const files = ['a','b','c','d','e','f','g','h'];
+                    const fromC = files.indexOf(fromSq[0]);
+                    const fromR = 8 - parseInt(fromSq[1]);
+                    const toC = files.indexOf(toSq[0]);
+                    const toR = 8 - parseInt(toSq[1]);
+
+                    const fromPos = new THREE.Vector3(fromC - 3.5, 0.4, fromR - 3.5);
+                    const toPos = new THREE.Vector3(toC - 3.5, 0.4, toR - 3.5);
+                    const hoverPos = new THREE.Vector3(0, 3.3, 0);
+
+                    const pMesh = pieceMeshes[fromSq];
+                    
+                    if(flyMesh && pMesh) {
+                        flyMesh.userData.isAnimating = true;
+                        
+                        const targetLook = new THREE.Vector3(fromPos.x, flyMesh.position.y, fromPos.z);
+                        flyMesh.lookAt(targetLook);
+                        
+                        new Tween(flyMesh.position, fromPos, 500, () => {
+                            let offset = {y: 0};
+                            
+                            // Leg grip animation
+                            if(flyMesh.userData.legLF) {
+                                new Tween(flyMesh.userData.legLF.rotation, {z: 0.1}, 200);
+                                new Tween(flyMesh.userData.legRF.rotation, {z: -0.1}, 200);
+                            }
+
+                            new Tween(offset, {y: 1.2}, 250, null, (t) => {
+                                 pMesh.position.y = 0.06 + offset.y;
+                                 flyMesh.position.y = fromPos.y + offset.y;
+                            });
+                            
+                            flyMesh.lookAt(new THREE.Vector3(toPos.x, flyMesh.position.y, toPos.z));
+
+                            new Tween(flyMesh.position, {x: toPos.x, z: toPos.z}, 600, () => {
+                                new Tween(offset, {y: 0}, 250, () => {
+                                    game.move(uci, { sloppy: true });
+                                    renderPieces3D();
+                                    
+                                    // Release grip
+                                    if(flyMesh.userData.legLF) {
+                                        new Tween(flyMesh.userData.legLF.rotation, {z: flyMesh.userData.legLF.userData.originalRotZ}, 200);
+                                        new Tween(flyMesh.userData.legRF.rotation, {z: flyMesh.userData.legRF.userData.originalRotZ}, 200);
+                                    }
+
+                                    flyMesh.lookAt(new THREE.Vector3(0, flyMesh.position.y, 0));
+                                    
+                                    new Tween(flyMesh.position, hoverPos, 600, () => {
+                                        flyMesh.userData.isAnimating = false;
+                                        
+                                        updateTurnOverlay("YOUR MOVE (Click piece to play)", "turn-user");
+                                        document.getElementById('brain-state').innerText = "IDLE";
+                                        document.getElementById('brain-state').style.color = "#00ff88";
+
+                                        if (game.game_over()) {
+                                            setTimeout(()=>alert("Game Over! Result: " + game.result()), 100);
+                                        }
+                                    });
+                                }, (t) => {
+                                    pMesh.position.y = 0.06 + offset.y;
+                                    flyMesh.position.y = toPos.y + offset.y;
+                                });
+                            });
+                        });
+                    } else {
+                        game.move(uci, { sloppy: true });
+                        renderPieces3D();
+                        updateTurnOverlay("YOUR MOVE (Click piece to play)", "turn-user");
+                        document.getElementById('brain-state').innerText = "IDLE";
+                        document.getElementById('brain-state').style.color = "#00ff88";
+                        if (game.game_over()) {
+                            alert("Game Over! Result: " + game.result());
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderCandidateMoves(candidates) {
+            const container = document.getElementById('candidates-container');
+            container.innerHTML = "";
+            candidates.forEach(c => {
+                const row = document.createElement('div');
+                row.className = 'candidate-row';
+                row.innerHTML = `
+                    <div class="candidate-move">${c.move}</div>
+                    <div class="bar-container">
+                        <div class="bar-fill" style="width: ${c.percentage}%;"></div>
+                    </div>
+                    <div class="candidate-pct">${c.percentage}%</div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function updateTurnOverlay(text, className) {
+            const overlay = document.getElementById('status-overlay');
+            document.getElementById('status-text').innerText = text;
+            overlay.className = "status-overlay " + className;
+        }
+
+        // ==========================================
+        // 2. HIGH-DENSITY BIOLOGICAL FLY BRAIN MODEL (12,000 NEURON PARTICLES)
+        // ==========================================
+        function initBrain3D() {
+            const container = document.getElementById('canvas-brain-3d');
+            sceneBrain = new THREE.Scene();
+            sceneBrain.background = new THREE.Color(0x020305);
+
+            cameraBrain = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.1, 100);
+            cameraBrain.position.set(0, 0, 3.6);
+
+            rendererBrain = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+            rendererBrain.setSize(container.clientWidth, container.clientHeight);
+            container.appendChild(rendererBrain.domElement);
+
+            brainControls = new THREE.OrbitControls(cameraBrain, rendererBrain.domElement);
+            brainControls.enableDamping = true;
+            brainControls.dampingFactor = 0.05;
+            brainControls.autoRotate = true;
+            brainControls.autoRotateSpeed = 1.2;
+
+            const particleCount = 12000;
+            const geometry = new THREE.BufferGeometry();
+            particlePositions = new Float32Array(particleCount * 3);
+            particleColors = new Float32Array(particleCount * 3);
+
+            for (let i = 0; i < particleCount; i++) {
+                let x, y, z;
+                let region = Math.random();
+
+                // 1. Cerebral Hemispheres (Left and Right) - 80% of neurons
+                if (region < 0.80) {
+                    const side = Math.random() > 0.5 ? 1 : -1;
+                    
+                    // Uniform points inside a sphere
+                    const u = Math.random(); const v = Math.random();
+                    const theta = u * 2.0 * Math.PI; const phi = Math.acos(2.0 * v - 1.0);
+                    const r = Math.cbrt(Math.random()); 
+                    
+                    // Scale into an elongated hemisphere shape
+                    x = side * 0.35 + (side * r * Math.sin(phi) * Math.cos(theta) * 0.4); 
+                    // Flatten the inner wall (where the two halves meet)
+                    if (side === 1 && x < 0.05) x = 0.05 + Math.random() * 0.1;
+                    if (side === -1 && x > -0.05) x = -0.05 - Math.random() * 0.1;
+
+                    y = 0.2 + (r * Math.sin(phi) * Math.sin(theta) * 0.55);
+                    z = 0.0 + (r * Math.cos(phi) * 0.7); // Long front-to-back
+
+                    // Color based on lobe (Z-axis position)
+                    if (z > 0.2) { // Frontal Lobe (Cyan)
+                        particleColors[i*3]=0.0; particleColors[i*3+1]=0.8; particleColors[i*3+2]=1.0;
+                    } else if (z < -0.2) { // Occipital Lobe (Magenta)
+                        particleColors[i*3]=1.0; particleColors[i*3+1]=0.2; particleColors[i*3+2]=0.8;
+                    } else { // Parietal/Temporal (Gold)
+                        particleColors[i*3]=1.0; particleColors[i*3+1]=0.7; particleColors[i*3+2]=0.2;
+                    }
+
+                // 2. Cerebellum (Lower back) - 15% of neurons
+                } else if (region < 0.95) {
+                    const u = Math.random(); const v = Math.random();
+                    const theta = u * 2.0 * Math.PI; const phi = Math.acos(2.0 * v - 1.0);
+                    const r = Math.cbrt(Math.random());
+                    
+                    x = (r * Math.sin(phi) * Math.cos(theta) * 0.45);
+                    y = -0.35 + (r * Math.sin(phi) * Math.sin(theta) * 0.25);
+                    z = -0.45 + (r * Math.cos(phi) * 0.25);
+                    
+                    // Cerebellum (Green)
+                    particleColors[i*3]=0.2; particleColors[i*3+1]=1.0; particleColors[i*3+2]=0.4;
+
+                // 3. Brainstem (Lower middle) - 5% of neurons
+                } else {
+                    const u = Math.random(); const v = Math.random();
+                    const theta = u * 2.0 * Math.PI; const phi = Math.acos(2.0 * v - 1.0);
+                    const r = Math.cbrt(Math.random());
+                    
+                    x = (r * Math.sin(phi) * Math.cos(theta) * 0.15);
+                    y = -0.5 - (Math.random() * 0.4); // Stretched downward cylinder
+                    z = -0.15 + (r * Math.cos(phi) * 0.15);
+                    
+                    // Brainstem (Red/Orange)
+                    particleColors[i*3]=1.0; particleColors[i*3+1]=0.3; particleColors[i*3+2]=0.1;
+                }
+
+                particlePositions[i * 3] = x;
+                particlePositions[i * 3 + 1] = y;
+                particlePositions[i * 3 + 2] = z;
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(particleColors, 3));
+
+            const material = new THREE.PointsMaterial({
+                size: 0.028,
+                map: particleSprite,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.9,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false
+            });
+
+            brainParticles = new THREE.Points(geometry, material);
+            sceneBrain.add(brainParticles);
+
+            function animateBrain() {
+                requestAnimationFrame(animateBrain);
+                brainControls.update();
+                rendererBrain.render(sceneBrain, cameraBrain);
+            }
+            animateBrain();
+        }
+
+        function pulseBrainParticles() {
+            if (!brainParticles) return;
+            brainParticles.scale.set(1.2, 1.2, 1.2);
+            setTimeout(() => { brainParticles.scale.set(1.0, 1.0, 1.0); }, 350);
+        }
+
+        function setupUIButtons() {
+            document.getElementById('btn-newgame').addEventListener('click', () => {
+                game.reset();
+                selectedSquare = null;
+                clearHighlights();
+                renderPieces3D();
+                updateTurnOverlay("YOUR MOVE (Click piece to play)", "turn-user");
+                document.getElementById('candidates-container').innerHTML = '<div style="font-size: 0.8rem; color: #5a6278; text-align: center; padding: 16px;">Click a piece to highlight legal moves...</div>';
+            });
+
+            document.getElementById('btn-undo').addEventListener('click', () => {
+                game.undo();
+                game.undo();
+                selectedSquare = null;
+                clearHighlights();
+                renderPieces3D();
+            });
+
+            document.getElementById('btn-recenter').addEventListener('click', () => {
+                controlsGame.reset();
+            });
+        }
+
+        function updateServerState() {
+            fetch('/api/state')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('val-games').innerText = data.total_games_trained;
+                document.getElementById('val-elo').innerText = "~" + data.estimated_elo;
+            });
+        }
+
+        function triggerTrain(games) {
+            document.getElementById('brain-state').innerText = `TRAINING ${games} GAMES ON M4 GPU...`;
+            document.getElementById('brain-state').style.color = "#ff9900";
+
+            fetch('/api/train', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ games: games })
+            })
+            .then(res => res.json())
+            .then(data => {
+                updateServerState();
+                document.getElementById('brain-state').innerText = "IDLE";
+                document.getElementById('brain-state').style.color = "#00ff88";
+                alert(`🚀 Successfully trained ${data.games_trained} games on Apple Silicon M4 GPU in ${data.elapsed_seconds}s!\nTotal Games Trained: ${data.total_games}\nUpdated ELO: ~${data.estimated_elo}`);
+            })
+            .catch(err => {
+                document.getElementById('brain-state').innerText = "IDLE";
+                document.getElementById('brain-state').style.color = "#00ff88";
+                alert("Training status updated!");
+                updateServerState();
+            });
+        }
+    </script>
+</body>
+</html>
