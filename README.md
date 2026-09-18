@@ -1,8 +1,4 @@
-<br/>
 <div align="center">
-  <a href="#">
-    <img src="https://raw.githubusercontent.com/tandpfun/skill-icons/main/icons/PyTorch-Dark.svg" alt="PyTorch" width="80" height="80">
-  </a>
 
   <h1 align="center">🪰 Drosophila Connectome AI</h1>
 
