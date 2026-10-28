@@ -15,6 +15,7 @@ A 3D chess game where the opponent is an animated *Drosophila* that physically l
 <img alt="Runs offline" src="https://img.shields.io/badge/runs%20offline-161B22?style=flat-square" />
 <img alt="Weights included" src="https://img.shields.io/badge/weights%20included-161B22?style=flat-square" />
 <img alt="5,065,217 parameters" src="https://img.shields.io/badge/5%2C065%2C217%20parameters-161B22?style=flat-square" />
+<img alt="MIT" src="https://img.shields.io/badge/MIT-161B22?style=flat-square" />
 
 </div>
 
