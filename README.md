@@ -12,7 +12,7 @@ A 3D chess game where the opponent is an animated *Drosophila* that physically l
 <img alt="PyTorch" src="https://img.shields.io/badge/PyTorch-161B22?style=flat-square&logo=pytorch&logoColor=white" />
 <img alt="Three.js" src="https://img.shields.io/badge/Three.js-161B22?style=flat-square&logo=threedotjs&logoColor=white" />
 <img alt="Flask" src="https://img.shields.io/badge/Flask-161B22?style=flat-square&logo=flask&logoColor=white" />
-<img alt="Runs offline" src="https://img.shields.io/badge/runs%20offline-161B22?style=flat-square" />
+<img alt="Local inference" src="https://img.shields.io/badge/local%20inference-161B22?style=flat-square" />
 <img alt="Weights included" src="https://img.shields.io/badge/weights%20included-161B22?style=flat-square" />
 <img alt="5,065,217 parameters" src="https://img.shields.io/badge/5%2C065%2C217%20parameters-161B22?style=flat-square" />
 <img alt="MIT" src="https://img.shields.io/badge/MIT-161B22?style=flat-square" />
@@ -95,7 +95,7 @@ pip install -r requirements.txt
 python server.py
 ```
 
-Open **http://localhost:5050**. The 20 MB `weights.pt` ships in the repo, so there is nothing to download and no API key to configure. Everything runs on your machine; the app makes no outbound requests.
+Open **http://localhost:5050**. The 20 MB `weights.pt` ships in the repo, so there is nothing to download and no API key to configure. Inference runs locally — the only outbound requests are the three JavaScript libraries the page pulls from a CDN on first load (`three.js`, `OrbitControls`, `chess.js`).
 
 PyTorch picks the fastest device it finds — Apple Silicon MPS, CUDA, or CPU — and prints which one it chose at startup.
 
