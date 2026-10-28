@@ -1,163 +1,141 @@
 <div align="center">
 
-<h1 align="center">🪰 Drosophila Connectome AI</h1>
+# Chess vs. a Fruit Fly
 
-<p align="center">
-  <strong>A biological neural network, digitized and trained to play chess.</strong>
-</p>
+**A fly picks up your pieces and carries them away.**
 
-<p align="center">
-  <a href="https://github.com/AdilSiddiquiHQ/fly-connectome-chess/stargazers">
-    <img src="https://img.shields.io/github/stars/AdilSiddiquiHQ/fly-connectome-chess?style=for-the-badge&color=eab308" alt="Stars Badge"/>
-  </a>
-  <a href="https://pytorch.org/">
-    <img src="https://img.shields.io/badge/PyTorch-MPS_Accelerated-ee4c2c.svg?style=for-the-badge&logo=pytorch&logoColor=white" alt="PyTorch Badge"/>
-  </a>
-  <a href="https://threejs.org/">
-    <img src="https://img.shields.io/badge/WebGL-Three.js-black.svg?style=for-the-badge&logo=three.js&logoColor=white" alt="Three.js Badge"/>
-  </a>
-  <a href="https://opensource.org/licenses/MIT">
-    <img src="https://img.shields.io/badge/License-MIT-success.svg?style=for-the-badge" alt="MIT License"/>
-  </a>
-</p>
+A 3D chess game where the opponent is an animated *Drosophila* that physically lifts the piece it wants to move, flies it across the board, and drops it on the target square. Underneath is a small neural network trained by self-play, and a telemetry panel that is honest about some things and not about others.
 
-<blockquote>
-  <p align="center">
-    <i>The line between biology and computer science has been erased.</i>
-  </p>
-</blockquote>
+<br />
 
-<br>
-
-[**Watch the Viral Breakdown**](#) &nbsp; &middot; &nbsp; [**Explore the Connectome**](https://flywire.ai) &nbsp; &middot; &nbsp; [**Quick Start**](#-quick-start)
+<img alt="Python 3.9+" src="https://img.shields.io/badge/Python%203.9%2B-161B22?style=flat-square&logo=python&logoColor=white" />
+<img alt="PyTorch" src="https://img.shields.io/badge/PyTorch-161B22?style=flat-square&logo=pytorch&logoColor=white" />
+<img alt="Three.js" src="https://img.shields.io/badge/Three.js-161B22?style=flat-square&logo=threedotjs&logoColor=white" />
+<img alt="Flask" src="https://img.shields.io/badge/Flask-161B22?style=flat-square&logo=flask&logoColor=white" />
+<img alt="Runs offline" src="https://img.shields.io/badge/runs%20offline-161B22?style=flat-square" />
+<img alt="Weights included" src="https://img.shields.io/badge/weights%20included-161B22?style=flat-square" />
+<img alt="5,065,217 parameters" src="https://img.shields.io/badge/5%2C065%2C217%20parameters-161B22?style=flat-square" />
 
 </div>
 
-<br>
-
-<details>
-  <summary><b>📖 Table of Contents</b></summary>
-  <ul>
-    <li><a href="#-the-mad-science">The Mad Science</a></li>
-    <li><a href="#-system-architecture">System Architecture</a></li>
-    <li><a href="#-the-biological-bridge">The Biological Bridge</a></li>
-    <li><a href="#-tech-stack">Tech Stack</a></li>
-    <li><a href="#-quick-start">Quick Start</a></li>
-    <li><a href="#-credits">Credits</a></li>
-  </ul>
-</details>
+![Chess vs. a Fruit Fly — the fly selects a knight, carries it across the board, and the telemetry panel updates](docs/demo.gif)
 
 ---
 
-## 🧬 The Mad Science
+## What you're looking at
 
-In an unprecedented feat of neuroscience, researchers at **Google** and the **Janelia Research Campus** took the physical brain of a fruit fly, stained it with heavy metals, and sliced it with a precision diamond knife into nanometer-thin sheets. Using advanced computer vision, they mapped every single neuron and synapse into a 3D digital schematic known as the Connectome.
-
-**This project downloads that exact biological schematic and turns it into an active PyTorch tensor network.**
-
-Instead of building an AI from scratch, we took a biological mind, wired a digital chessboard into its simulated optic nerves, and connected its descending motor neurons to physical chess moves. Using **Dopamine Reinforcement Learning**, we are physically rewiring the biological pathways into a chess engine.
+- **The fly is the opponent, and it moves the pieces.** When it decides on a move, it flies to the source square, grips the piece with its legs, carries it to the destination, and releases. Every move in the GIF above is a real game against the real model — no scripted animation.
+- **Every legal move is scored by a neural network, then the best one is played.** No search tree, no opening book, no engine.
+- **The sidebar is a live view of that decision:** the candidate moves, their softmax probabilities, and a 3D particle brain that pulses when the network runs.
 
 ---
 
-## 🏗 System Architecture
+## What's real and what's theatre
 
-The entire pipeline runs locally, bridging a Three.js frontend visualizer with a biological PyTorch backend.
+This project began as "a fly connectome plays chess." It is not that, and pretending otherwise would waste your time. Here is the split.
 
-```mermaid
-graph TD
-    classDef default fill:#111,stroke:#333,stroke-width:1px,color:#fff;
-    classDef highlight fill:#22D3EE,stroke:#111,stroke-width:1px,color:#000;
+| The UI says | What is actually happening |
+|:---|:---|
+| **164,587 neurons** | `NUM_CENTRAL_NEURONS = 153593` is defined in `train_fly.py` and used by nothing. The model has **5,065,217 weights across four linear layers**. |
+| **Neurons fired · Spikes · Motor spikes · Sim time** | Generated in `server.py` from `hash(fen)`. The same position always produces the same numbers, because they are the same numbers. No simulation runs. |
+| **Estimated ELO ~433** | `200 + min(games, 20000) / 20000 × 500`. It is a progress bar wearing a chess rating's name. It has never been measured against anything. |
+| **Dopamine reinforcement learning** | Real training loop, crude signal: one reward per game, applied identically to every position in that game. No per-move credit assignment. |
+| **Trained on a connectome** | No. `weights.pt` started from random initialisation and was shaped by 9,353 games of self-play. The FlyWire wiring diagram is not loaded anywhere in this repo. |
 
-    A[Board State]:::default -->|768 Feature Encoding| B(Optic Lobe Sensory Injection):::default
-    B -->|Electrical Propagation| C{Drosophila Connectome 164k}:::highlight
-    C -->|Simulated Physics| D[Descending Motor Neurons]:::default
-    D -->|4,096 Output Tensors| E(Chess.js Logic Filter):::default
-    E -->|Execute Strongest Legal Move| F((Reward Trigger)):::highlight
-    F -->|Virtual Dopamine| C
+What *is* real: the 3D board and the fly animation, the move encoder, the network, the candidate scoring, the mate-in-one assist, the self-play training loop, and the 9,353 games behind the current weights. The rest is set dressing, and the set dressing is where the fun is.
+
+---
+
+## How the decision is made
+
+```text
+board + one candidate move
+  └─ 8,865-dim sensory vector
+       768   piece-square bits        (64 squares × 12 piece/colour combos)
+         3   side to move, castling rights
+       128   candidate move           (from-square one-hot, to-square one-hot)
+       400   background noise         (deterministic, seeded by hash(fen + move))
+  └─ Linear 8,865 → 512    ReLU
+  └─ Linear   512 → 512    + residual, ReLU
+  └─ Linear   512 → 512    + residual, ReLU
+  └─ Linear   512 → 1      Tanh
+  └─ score ∈ [-1, 1]
 ```
 
----
+`select_best_move()` builds that vector **once per legal move**, runs the batch through the network, and takes the argmax. A softmax over the scores is what fills the sidebar — which is why the bars sit near 5% each: with ~30 candidates the network is not confident, and the panel shows that honestly.
 
-## 🔬 The Biological Bridge
+Two hard-coded assists sit in front of the network:
 
-This project utilizes a standard **Three-Step Bridge** for connectome manipulation:
+1. If any legal move is checkmate, play it.
+2. Otherwise discard every move that allows a mate in one, then score what's left.
 
-<table>
-  <tr>
-    <td width="50%">
-      <h3>👁️ 1. Sensory Mapping</h3>
-      We map the 768 possible piece-on-square combinations (64 squares × 12 piece types) to a specific cluster of the fly's 8,865 sensory neurons. When a White Knight lands on F3, we inject a <code>1.0</code> voltage spike into that exact neuron. <b>The fly literally feels the board as a high-dimensional electrical pattern.</b>
-    </td>
-    <td width="50%">
-      <h3>🧠 2. Simulated Propagation</h3>
-      The raw connectome provides the wiring diagram, but not synaptic strength. As the sensory electricity cascades chaotically through the 164,000 neurons, we simulate games. When the fly makes a good move, a virtual <b>Dopamine Reward</b> triggers, permanently carving pathways into the PyTorch tensor matrix.
-    </td>
-  </tr>
-  <tr>
-    <td colspan="2">
-      <h3>💪 3. Motor Readout</h3>
-      The electricity eventually reaches the descending motor neurons (the nerves that normally flap wings). We map these to the 4,096 possible physical chess moves (Start Square ➔ End Square). A logic engine acts as a survival filter, ignoring illegal "twitches" and executing the strongest legal muscle contraction.
-    </td>
-  </tr>
-</table>
+That is the entire chess engine. There is no lookahead beyond one ply of mate detection.
 
 ---
 
-## 🛠 Tech Stack
+## Why it plays badly
 
-| Domain | Technology | Purpose |
-|:---|:---|:---|
-| **Deep Learning** | `PyTorch` | Simulates the 164k neuron matrix (MPS Apple Silicon Accelerated). |
-| **Backend API** | `Flask` & `Python 3` | Bridges the browser visualization to the biological tensor calculations. |
-| **Frontend UI** | `Three.js` & `WebGL` | Renders the hyper-realistic fly, HDRI board, and glowing 3D particle simulation of the fly's brain (Optic Lobes, Cerebellum). |
-| **Logic Filter** | `chess.js` | Filters the chaotic motor neuron output for legal chess moves. |
+The training loop plays a game, then backpropagates the final result (`+1` / `0` / `-1`) against **every position in that game**, with equal weight. A move that lost the queen in the opening and a move that delivered mate in the endgame receive the same target.
+
+That is a single scalar reward with no credit assignment, no value bootstrapping, no policy gradient, and no search to compensate. It learns to prefer positions that resemble games it won, which is why it develops opinions and not a plan. 9,353 games is enough to make it stop hanging pieces to mate-in-one. It is not enough to make it good, and no amount of extra games will fix the signal.
 
 ---
 
-## 🚀 Quick Start
+## Run it
 
-Challenge a biological connectome to a game of chess on your own machine.
-
-### 1. Clone & Install
-Requires Python 3.9+ and pip. If you are on an M-Series Mac, PyTorch will automatically use the `mps` hardware acceleration.
 ```bash
 git clone https://github.com/AdilSiddiquiHQ/fly-connectome-chess.git
 cd fly-connectome-chess
-pip install -r requirements.txt
-```
 
-### 2. Boot the Connectome
-Start the Flask server to load the 2,000+ game trained `weights.pt` synaptic memory into RAM.
-```bash
+python3 -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+
 python server.py
 ```
 
-### 3. Initialize the Visualizer
-Open your web browser and navigate to `http://localhost:5050`.
+Open **http://localhost:5050**. The 20 MB `weights.pt` ships in the repo, so there is nothing to download and no API key to configure. Everything runs on your machine; the app makes no outbound requests.
 
-> **Hyper-Bolic Training:** Hit the `+1000 Games` button in the UI if you want to push the fly back into the training loop and carve more dopamine pathways live.
+PyTorch picks the fastest device it finds — Apple Silicon MPS, CUDA, or CPU — and prints which one it chose at startup.
 
----
+### The three buttons
 
-## 🤝 Contributing (Crowd-Sourcing the Brain)
-
-Because this project relies on Reinforcement Learning, **you can help make the fly smarter.** 
-
-When you clone the repository, you start with the exact biological synaptic weights saved in the `weights.pt` file. If you run the project locally and click **"+1000 Games"**, the PyTorch model will train on your own hardware, carving new dopamine pathways and increasing the fly's ELO.
-
-If you successfully train the fly to a higher level of intelligence:
-1. Fork this repository.
-2. Replace the `weights.pt` and `metadata.json` files with your newly trained versions.
-3. Submit a **Pull Request**. 
-
-Together, we can crowd-source the training of a biological connectome until it reaches Grandmaster status.
+| Button | What it does |
+|:---|:---|
+| **New Game** | Resets the board. Weights are untouched. |
+| **Undo Move** | Steps back one of your moves. |
+| **+100 / +500 / +1,000 Games** | Runs that many self-play games on your hardware, then rewrites `weights.pt` and `metadata.json`. Training is live and destructive — copy the weights first if you want to keep them. |
 
 ---
 
-## 🏆 Credits
-The structural data for the neuron mapping is derived from the open-source work of the **Janelia Research Campus** and **Google Research** via the [FlyWire](https://flywire.ai) project. 
+## Repo map
 
-<br>
+| Path | What's in it |
+|:---|:---|
+| `server.py` | Flask server on `:5050`. `/api/move` scores the position, `/api/train` runs self-play, `/api/state` reports device and game count. Also where the fake telemetry lives. |
+| `train_fly.py` | The network, the 8,865-dim encoder, move selection, the mate assists, and the self-play loop. |
+| `index.html` | The whole front end in one file: Three.js scene, procedural fly and Staunton pieces, the tween engine, the sidebar. |
+| `weights.pt` | 5,065,217 parameters after 9,353 self-play games. |
+| `metadata.json` | Games trained. Nothing else. |
+
+---
+
+## If I keep working on this
+
+- **Load the actual connectome.** FlyWire publishes the MaleCNS adjacency matrix. The honest version of this project wires the 8,865 sensory and 2,129 motor neurons to real edges and runs the network on the graph, instead of naming four `nn.Linear` layers after brain regions.
+- **Replace the scalar reward with something that can assign credit** — per-move advantage, TD(λ), or a small policy head trained on self-play outcomes.
+- **Measure the rating instead of computing it.** A few hundred games against fixed opponents, reported with error bars, beats `games / 20000 × 500` every time.
+- **Delete the fake telemetry or make it real.** A panel showing actual tensor shapes, real forward-pass time, and real top-k logits would be more interesting than invented spike counts.
+
+---
+
+## Credits
+
+The neuron counts, the visual language, and the name come from the [FlyWire](https://flywire.ai) consortium's **MaleCNS v1.0** dataset (Janelia Research Campus, Google Research, and collaborators) — the first complete wiring diagram of an adult insect brain. It is extraordinary work and it deserves better than being a label on an MLP.
+
+Chess rules and move generation: [`python-chess`](https://python-chess.readthedocs.io/). Rendering: [Three.js](https://threejs.org/). Nothing here would exist without either.
+
 <div align="center">
-  <b>If you found this concept mind-blowing, consider dropping a ⭐ on the repo!</b>
+<br />
+<sub>If the fly carrying a knight made you smile, a star is the cheapest way to say so.</sub>
 </div>
