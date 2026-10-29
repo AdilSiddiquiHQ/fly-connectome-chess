@@ -1,0 +1,294 @@
+{
+  "summary": {
+    "opponent": "greedy",
+    "games": 30,
+    "wins": 1,
+    "draws": 27,
+    "losses": 2,
+    "score": 0.4833,
+    "score_ci95": [
+      0.3168,
+      0.6536
+    ],
+    "capped_games": 12,
+    "avg_plies": 106.6,
+    "avg_final_material": -24.07,
+    "pct_up_3_or_more": 0.0333,
+    "pct_down_3_or_more": 0.9667,
+    "seconds": 77.3,
+    "seed": 1,
+    "max_plies": 150
+  },
+  "games": [
+    {
+      "outcome": "draw",
+      "score": 0.5,
+      "plies": 150,
+      "material": -19,
+      "capped": true,
+      "final_fen": "4k1K1/8/6p1/1p6/p1rb2p1/5p2/n4n2/8 w - - 4 76",
+      "fly_color": "white"
+    },
+    {
+      "outcome": "draw",
+      "score": 0.5,
+      "plies": 150,
+      "material": -25,
+      "capped": true,
+      "final_fen": "B6k/8/P7/1P2PP2/6P1/2N5/2P4K/RN2R3 w - - 3 76",
+      "fly_color": "black"
+    },
+    {
+      "outcome": "loss",
+      "score": 0.0,
+      "plies": 66,
+      "material": -24,
+      "capped": false,
+      "final_fen": "r2kq3/p3bpr1/2pp4/np2pK1p/8/3b4/1P3P1P/R1B5 w - - 0 34",
+      "fly_color": "white"
+    },
+    {
+      "outcome": "draw",
+      "score": 0.5,
+      "plies": 150,
+      "material": -26,
+      "capped": true,
+      "final_fen": "7k/1N2N2p/8/PP1PPPP1/2P1R2P/3K2R1/8/5B2 w - - 1 76",
+      "fly_color": "black"
+    },
+    {
+      "outcome": "draw",
+      "score": 0.5,
+      "plies": 150,
+      "material": -20,
+      "capped": true,
+      "final_fen": "6K1/7p/3p4/6b1/p7/8/2q4r/3k4 w - - 27 76",
+      "fly_color": "white"
+    },
+    {
+      "outcome": "draw",
+      "score": 0.5,
+      "plies": 68,
+      "material": -25,
+      "capped": false,
+      "final_fen": "7k/1p1p4/8/1N6/1B1PP3/2P2PP1/PP5P/R3KBR1 w - - 9 35",
+      "fly_color": "black"
+    },
+    {
+      "outcome": "win",
+      "score": 1.0,
+      "plies": 27,
+      "material": 6,
+      "capped": false,
+      "final_fen": "rnQ1kbn1/1p2ppp1/8/p2p4/8/8/PP1PPPP1/R1B1KB2 b q - 0 14",
+      "fly_color": "white"
+    },
+    {
+      "outcome": "draw",
+      "score": 0.5,
+      "plies": 58,
+      "material": -23,
+      "capped": false,
+      "final_fen": "7k/1ppp4/5p2/3P4/1PP5/4PPP1/P3B2P/RNB1K2R w Q - 9 30",
+      "fly_color": "black"
+    },
+    {
+      "outcome": "draw",
+      "score": 0.5,
+      "plies": 136,
+      "material": -20,
+      "capped": false,
+      "final_fen": "3k3K/r6b/1p1p4/p1p5/3p1p2/2n3b1/8/8 w - - 4 69",
+      "fly_color": "white"
+    },
+    {
+      "outcome": "draw",
+      "score": 0.5,
+      "plies": 75,
+      "material": -36,
+      "capped": false,
+      "final_fen": "7k/B7/6Q1/7P/PP1PP1P1/1R3P1R/2P5/1N1K2N1 b - - 0 38",
+      "fly_color": "black"
+    },
+    {
+      "outcome": "draw",
+      "score": 0.5,
+      "plies": 56,
+      "material": -41,
+      "capped": false,
+      "final_fen": "rnb2b2/1pkp1pp1/8/p2np1K1/8/7q/q7/8 w - - 10 29",
+      "fly_color": "white"
+    },
+    {
+      "outcome": "draw",
+      "score": 0.5,
+      "plies": 98,
+      "material": -14,
+      "capped": false,
+      "final_fen": "2b3k1/pp1p3p/2n5/3N4/2PPPP2/1P1RN1PP/P4K2/1R6 w - - 14 50",
+      "fly_color": "black"
+    },
+    {
+      "outcome": "draw",
+      "score": 0.5,
+      "plies": 100,
+      "material": -41,
+      "capped": false,
+      "final_fen": "1r3b1K/1bkn4/1pp5/p4qp1/4p2p/7n/q7/8 w - - 8 51",
+      "fly_color": "white"
+    },
+    {
+      "outcome": "draw",
+      "score": 0.5,
+      "plies": 150,
+      "material": -30,
+      "capped": true,
+      "final_fen": "6k1/8/5P2/2B1P1P1/PP5P/2P2N2/6Q1/4KN1R w - - 3 76",
+      "fly_color": "black"
+    },
+    {
+      "outcome": "draw",
+      "score": 0.5,
+      "plies": 150,
+      "material": -19,
+      "capped": true,
+      "final_fen": "6K1/2pk4/1p2p1b1/3n4/3p1p2/1rn5/8/8 w - - 10 76",
+      "fly_color": "white"
+    },
+    {
+      "outcome": "draw",
+      "score": 0.5,
+      "plies": 150,
+      "material": -19,
+      "capped": true,
+      "final_fen": "7k/p7/3PP3/1PP4P/8/P7/3Q4/2R3K1 w - - 11 76",
+      "fly_color": "black"
+    },
+    {
+      "outcome": "loss",
+      "score": 0.0,
+      "plies": 62,
+      "material": -34,
+      "capped": false,
+      "final_fen": "rn2k3/p1pp1p2/1p3n2/6p1/7K/4q3/r7/5b2 w q - 0 32",
+      "fly_color": "white"
+    },
+    {
+      "outcome": "draw",
+      "score": 0.5,
+      "plies": 78,
+      "material": -22,
+      "capped": false,
+      "final_fen": "7k/Bp1N1p1p/7P/P7/3PPPP1/1PP5/8/RN1K1B2 w - - 7 40",
+      "fly_color": "black"
+    },
+    {
+      "outcome": "draw",
+      "score": 0.5,
+      "plies": 75,
+      "material": -21,
+      "capped": false,
+      "final_fen": "r5n1/3kpp2/7r/ppp1nK1p/8/7P/8/8 b - - 11 38",
+      "fly_color": "white"
+    },
+    {
+      "outcome": "draw",
+      "score": 0.5,
+      "plies": 150,
+      "material": -32,
+      "capped": true,
+      "final_fen": "3Q4/6k1/P7/5P2/1PP3P1/2R1P1NP/2RK4/5B2 w - - 1 76",
+      "fly_color": "black"
+    },
+    {
+      "outcome": "draw",
+      "score": 0.5,
+      "plies": 139,
+      "material": -10,
+      "capped": false,
+      "final_fen": "7K/2k5/1p6/3p4/p1p1n3/2n1pp2/1P5P/8 b - - 9 70",
+      "fly_color": "white"
+    },
+    {
+      "outcome": "draw",
+      "score": 0.5,
+      "plies": 60,
+      "material": -22,
+      "capped": false,
+      "final_fen": "7r/1p1pkp2/8/4B3/1P1PP1P1/P1P2PKP/R7/1N3BNR w - - 11 31",
+      "fly_color": "black"
+    },
+    {
+      "outcome": "draw",
+      "score": 0.5,
+      "plies": 62,
+      "material": -32,
+      "capped": false,
+      "final_fen": "r1b1k1n1/p4p2/n2p2p1/1pb3K1/2p5/8/5q2/8 w q - 0 32",
+      "fly_color": "white"
+    },
+    {
+      "outcome": "draw",
+      "score": 0.5,
+      "plies": 24,
+      "material": -6,
+      "capped": false,
+      "final_fen": "Bnbqkbr1/p1pppppp/7n/8/1P2P3/2PK2P1/P2P1P1P/RNB2QNR w - - 11 13",
+      "fly_color": "black"
+    },
+    {
+      "outcome": "draw",
+      "score": 0.5,
+      "plies": 120,
+      "material": -29,
+      "capped": false,
+      "final_fen": "3K1k1r/1q6/8/p1b1p1p1/5pnp/1p6/8/3b4 w - - 2 61",
+      "fly_color": "white"
+    },
+    {
+      "outcome": "draw",
+      "score": 0.5,
+      "plies": 150,
+      "material": -32,
+      "capped": true,
+      "final_fen": "QB5k/8/8/1PP2P1P/2B3P1/4P3/P4R2/3K2R1 w - - 3 76",
+      "fly_color": "black"
+    },
+    {
+      "outcome": "draw",
+      "score": 0.5,
+      "plies": 150,
+      "material": -21,
+      "capped": true,
+      "final_fen": "r7/3b2K1/1pkp4/p4pp1/3p4/4p3/5n2/2b5 w - - 0 76",
+      "fly_color": "white"
+    },
+    {
+      "outcome": "draw",
+      "score": 0.5,
+      "plies": 93,
+      "material": -43,
+      "capped": false,
+      "final_fen": "3B2Q1/8/8/3B3k/P1PPP3/1P6/2N1KP2/1RQ3R1 b - - 1 47",
+      "fly_color": "black"
+    },
+    {
+      "outcome": "draw",
+      "score": 0.5,
+      "plies": 150,
+      "material": -15,
+      "capped": true,
+      "final_fen": "5K2/7k/3p4/1p3b2/p1p3p1/2b2p2/4n3/8 w - - 0 76",
+      "fly_color": "white"
+    },
+    {
+      "outcome": "draw",
+      "score": 0.5,
+      "plies": 150,
+      "material": -27,
+      "capped": true,
+      "final_fen": "7k/8/8/1P5P/2PP2P1/P3R3/4P1K1/4Q1NB w - - 7 76",
+      "fly_color": "black"
+    }
+  ]
+}
